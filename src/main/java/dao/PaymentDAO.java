@@ -247,9 +247,12 @@ public class PaymentDAO {
      * Verify deposit payment - updates paid amount and decreases remaining
      */
     public boolean verifyDepositPayment(int payId, double depositAmount, int verifiedBy) {
-        String sql = "UPDATE payment SET paidamount = paidamount + ?, remamount = remamount - ?, " +
-                     "paystatus = CASE WHEN remamount - ? <= 0 THEN 'verified' ELSE 'partial' END, " +
-                     "verifiedby = ?, verifieddate = CURRENT_TIMESTAMP " +
+        String sql = "UPDATE payment SET " +
+                     "paidamount = paidamount + ?, " +
+                     "remamount = GREATEST(remamount - ?, 0), " +
+                     "paystatus = CASE WHEN (remamount - ?) <= 0.01 THEN 'verified' ELSE 'partial' END, " +
+                     "verifiedby = ?, " +
+                     "verifieddate = CURRENT_DATE " +
                      "WHERE payid = ?";
         
         try (Connection conn = DBConnection.getConnection();
@@ -271,17 +274,20 @@ public class PaymentDAO {
      * Verify full payment - marks as fully verified
      */
     public boolean verifyFullPayment(int payId, double fullAmount, int verifiedBy) {
-        String sql = "UPDATE payment SET paidamount = paidamount + ?, remamount = remamount - ?, " +
-                     "paystatus = 'verified', verifiedby = ?, verifieddate = CURRENT_TIMESTAMP " +
+        String sql = "UPDATE payment SET " +
+                     "paidamount = paidamount + ?, " +
+                     "remamount = 0, " +
+                     "paystatus = 'verified', " +
+                     "verifiedby = ?, " +
+                     "verifieddate = CURRENT_DATE " +
                      "WHERE payid = ?";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setDouble(1, fullAmount);
-            ps.setDouble(2, fullAmount);
-            ps.setInt(3, verifiedBy);
-            ps.setInt(4, payId);
+            ps.setInt(2, verifiedBy);
+            ps.setInt(3, payId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
