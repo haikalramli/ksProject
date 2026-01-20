@@ -1,5 +1,7 @@
 package util;
 
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -30,13 +32,29 @@ public class DBConnection {
     public static Connection getConnection() {
         try {
             Connection conn = null;
-            String dbUrl = System.getenv("JDBC_DATABASE_URL");
+            String jdbcDbUrl = System.getenv("JDBC_DATABASE_URL");
             
-            if (dbUrl != null && !dbUrl.isEmpty()) {
-                // Use Heroku environment variable
-                conn = DriverManager.getConnection(dbUrl);
+            if (jdbcDbUrl != null && !jdbcDbUrl.isEmpty()) {
+                // Use Heroku JDBC environment variable if available
+                conn = DriverManager.getConnection(jdbcDbUrl);
             } else {
-                // Fallback to local configuration
+                String herokuUrl = System.getenv("DATABASE_URL");
+                if (herokuUrl != null && !herokuUrl.isEmpty()) {
+                    // Parse standard Heroku DATABASE_URL: postgres://user:pass@host:port/db
+                    try {
+                        URI dbUri = new URI(herokuUrl);
+                        String username = dbUri.getUserInfo().split(":")[0];
+                        String password = dbUri.getUserInfo().split(":")[1];
+                        String dbJdbcUrl = "jdbc:postgresql://" + dbUri.getHost() + ':' + dbUri.getPort() + dbUri.getPath() + "?sslmode=require";
+                        conn = DriverManager.getConnection(dbJdbcUrl, username, password);
+                    } catch (URISyntaxException e) {
+                        System.err.println("Invalid DATABASE_URL syntax: " + e.getMessage());
+                    }
+                }
+            }
+            
+            // Fallback to local configuration if no Heroku variables are found or failed
+            if (conn == null) {
                 conn = DriverManager.getConnection(URL, USERNAME, PASSWORD);
             }
             
