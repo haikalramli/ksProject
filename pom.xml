@@ -27,17 +27,23 @@
       <version>2.3.3</version>
       <scope>provided</scope>
     </dependency>
-    <!-- JSTL API -->
-    <dependency>
-      <groupId>javax.servlet.jsp.jstl</groupId>
-      <artifactId>javax.servlet.jsp.jstl-api</artifactId>
-      <version>1.2.2</version>
-    </dependency>
-    <!-- JSTL Implementation -->
+    <!-- JSTL API and Implementation -->
     <dependency>
       <groupId>javax.servlet</groupId>
       <artifactId>jstl</artifactId>
       <version>1.2</version>
+    </dependency>
+    <!-- Tomcat JSP Implementation (Jasper) - needed for Heroku -->
+    <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-jasper</artifactId>
+      <version>9.0.89</version>
+    </dependency>
+    <!-- Expression Language Implementation -->
+    <dependency>
+      <groupId>org.apache.tomcat.embed</groupId>
+      <artifactId>tomcat-embed-el</artifactId>
+      <version>9.0.89</version>
     </dependency>
     <!-- PostgreSQL JDBC Driver -->
     <dependency>
