@@ -51,6 +51,18 @@
       <artifactId>postgresql</artifactId>
       <version>42.6.0</version>
     </dependency>
+    <!-- Spring Security for BCrypt password hashing -->
+    <dependency>
+      <groupId>org.springframework.security</groupId>
+      <artifactId>spring-security-crypto</artifactId>
+      <version>6.2.1</version>
+    </dependency>
+    <!-- Required for Spring Security Crypto -->
+    <dependency>
+      <groupId>commons-logging</groupId>
+      <artifactId>commons-logging</artifactId>
+      <version>1.2</version>
+    </dependency>
   </dependencies>
   <build>
     <finalName>KsStudioFinalize</finalName>

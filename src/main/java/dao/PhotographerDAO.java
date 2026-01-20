@@ -12,17 +12,20 @@ public class PhotographerDAO {
      * Login validation for photographer
      */
     public Photographer login(String email, String password) {
-        String sql = "SELECT * FROM photographer WHERE pgemail = ? AND pgpass = ? AND pgstatus = 'active'";
+        String sql = "SELECT * FROM photographer WHERE pgemail = ? AND pgstatus = 'active'";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, email);
-            ps.setString(2, password);
             ResultSet rs = ps.executeQuery();
             
             if (rs.next()) {
-                return mapResultSet(rs);
+                String hashedPassword = rs.getString("pgpass");
+                // Verify password using BCrypt
+                if (PasswordUtil.verifyPassword(password, hashedPassword)) {
+                    return mapResultSet(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -234,7 +237,8 @@ public class PhotographerDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, newPassword);
+            // Hash password before storing
+            ps.setString(1, PasswordUtil.hashPassword(newPassword));
             ps.setInt(2, pgId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {

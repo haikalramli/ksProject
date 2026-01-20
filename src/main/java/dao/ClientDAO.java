@@ -12,17 +12,20 @@ public class ClientDAO {
      * Login validation for client
      */
     public Client login(String email, String password) {
-        String sql = "SELECT * FROM client WHERE clemail = ? AND clpass = ? AND clstatus = 'active'";
+        String sql = "SELECT * FROM client WHERE clemail = ? AND clstatus = 'active'";
         
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
             ps.setString(1, email);
-            ps.setString(2, password);
             ResultSet rs = ps.executeQuery();
             
             if (rs.next()) {
-                return mapResultSet(rs);
+                String hashedPassword = rs.getString("clpass");
+                // Verify password using BCrypt
+                if (PasswordUtil.verifyPassword(password, hashedPassword)) {
+                    return mapResultSet(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
@@ -42,7 +45,8 @@ public class ClientDAO {
             ps.setString(1, client.getClName());
             ps.setString(2, client.getClPh());
             ps.setString(3, client.getClEmail());
-            ps.setString(4, client.getClPass());
+            // Hash password before storing
+            ps.setString(4, PasswordUtil.hashPassword(client.getClPass()));
             ps.setString(5, client.getClAddress());
             
             return ps.executeUpdate() > 0;
@@ -146,7 +150,8 @@ public class ClientDAO {
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            ps.setString(1, newPassword);
+            // Hash password before storing
+            ps.setString(1, PasswordUtil.hashPassword(newPassword));
             ps.setInt(2, clId);
             return ps.executeUpdate() > 0;
         } catch (SQLException e) {
