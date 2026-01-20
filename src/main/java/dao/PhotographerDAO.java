@@ -11,6 +11,7 @@ public class PhotographerDAO {
     
     /**
      * Login validation for photographer
+     * Supports both BCrypt hashed passwords and plain text (for migration)
      */
     public Photographer login(String email, String password) {
         String sql = "SELECT * FROM photographer WHERE pgemail = ? AND pgstatus = 'active'";
@@ -22,9 +23,19 @@ public class PhotographerDAO {
             ResultSet rs = ps.executeQuery();
             
             if (rs.next()) {
-                String hashedPassword = rs.getString("pgpass");
-                // Verify password using BCrypt
-                if (PasswordUtil.verifyPassword(password, hashedPassword)) {
+                String storedPassword = rs.getString("pgpass");
+                boolean passwordMatch = false;
+                
+                // Check if stored password is BCrypt hash (starts with $2a$ or $2b$)
+                if (storedPassword != null && (storedPassword.startsWith("$2a$") || storedPassword.startsWith("$2b$"))) {
+                    // Verify using BCrypt
+                    passwordMatch = PasswordUtil.verifyPassword(password, storedPassword);
+                } else {
+                    // Plain text comparison (for migration - should be removed later)
+                    passwordMatch = password.equals(storedPassword);
+                }
+                
+                if (passwordMatch) {
                     return mapResultSet(rs);
                 }
             }
