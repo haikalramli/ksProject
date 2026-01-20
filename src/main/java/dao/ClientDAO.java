@@ -2,6 +2,7 @@ package dao;
 
 import model.Client;
 import util.DBConnection;
+import util.PasswordUtil;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
@@ -193,3 +194,4 @@ public class ClientDAO {
         return c;
     }
 }
+
